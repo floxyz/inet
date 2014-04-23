@@ -51,6 +51,9 @@ class INET_API IdealMac : public MACProtocolBase
     IPassiveQueue *queueModule;
 
     int outStandingRequests;
+    cPacket *lastSentPk;
+    simtime_t ackTimeout;
+    cMessage *ackTimeoutMsg;
 
   protected:
     /** implements MacBase functions */
@@ -65,6 +68,7 @@ class INET_API IdealMac : public MACProtocolBase
     virtual IdealMacFrame *encapsulate(cPacket *msg);
     virtual cPacket *decapsulate(IdealMacFrame *frame);
     virtual void initializeMACAddress();
+    virtual void acked(IdealMacFrame *frame);   // called by other IdealMac module, when receiving a packet with my moduleID
 
     // get MSG from queue
     virtual void getNextMsgFromHL();
@@ -76,6 +80,7 @@ class INET_API IdealMac : public MACProtocolBase
     //@{
     virtual void handleUpperPacket(cPacket *msg);
     virtual void handleLowerPacket(cPacket *msg);
+    virtual void handleSelfMessage(cMessage* message);
     //@}
 
   public:
