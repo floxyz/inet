@@ -49,6 +49,7 @@ simple IdealMac extends MACProtocolBase like ILinkLayer
 
         @class(IdealMac);
         @signal[dropPkNotForUs](type=IdealMacFrame);
+        @signal[NF_LINK_BREAK](type=IPv4Datagram); // TODO: type should be INetworkDatagram
         @statistic[passedUpPk](title="packets passed to higher layer"; source=packetSentToUpper; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
         @statistic[sentDownPk](title="packets sent to lower layer"; source=packetSentToLower; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
         @statistic[rcvdPkFromHL](title="packets received from higher layer"; source=packetReceivedFromUpper; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);

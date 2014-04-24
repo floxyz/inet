@@ -85,6 +85,7 @@ class INET_API IdealMac : public MACProtocolBase
 
   public:
     IdealMac();
+    virtual ~IdealMac();
 
   protected:
     virtual int numInitStages() const { return NUM_INIT_STAGES; }
