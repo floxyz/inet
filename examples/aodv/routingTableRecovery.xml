@@ -1,0 +1,14 @@
+<scenario>
+    <at t="5.5">
+        <tell module="lifecycleController" target="intermediateNodeB" operation="NodeShutdownOperation"/>
+    </at>
+    <at t="7.5">
+        <tell module="lifecycleController" target="intermediateNodeB" operation="NodeStartOperation"/>
+    </at>
+	<at t="8.5">
+        <tell module="lifecycleController" target="intermediateNodeA" operation="NodeShutdownOperation"/>
+    </at>
+	<at t="8.5">
+        <tell module="lifecycleController" target="intermediateNodeA" operation="NodeShutdownOperation"/>
+    </at>
+</scenario>
