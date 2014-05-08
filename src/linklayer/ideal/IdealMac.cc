@@ -153,8 +153,7 @@ void IdealMac::receiveSignal(cComponent *source, simsignal_t signalID, long valu
         IRadio::TransmissionState newRadioTransmissionState = (IRadio::TransmissionState)value;
         if (transmissionState == IRadio::TRANSMISSION_STATE_TRANSMITTING && newRadioTransmissionState == IRadio::TRANSMISSION_STATE_IDLE)
         {
-            radio->setRadioMode(fullDuplex ? IRadio::RADIO_MODE_TRANSCEIVER : IRadio::RADIO_MODE_RECEIVER);
-            getNextMsgFromHL();
+            radio->setRadioMode(fullDuplex ? OldIRadio::RADIO_MODE_TRANSCEIVER : OldIRadio::RADIO_MODE_RECEIVER);
 
             if (!lastSentPk)
                 getNextMsgFromHL();
