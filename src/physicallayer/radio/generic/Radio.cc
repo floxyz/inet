@@ -97,6 +97,7 @@ void Radio::initialize(int stage)
     }
     else if (stage == INITSTAGE_LAST)
     {
+        // FIXME: it writes the pointer of the antenna
         EV_DEBUG << "Radio initialized with " << antenna << ", " << transmitter << ", " << receiver << endl;
     }
 }
