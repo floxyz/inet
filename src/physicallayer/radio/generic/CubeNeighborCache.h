@@ -3,7 +3,7 @@
 
 #include "RadioChannel.h"
 
-class INET_API CubeNeighborCache : public INeighborCache, public cListener, public cSimpleModule
+class INET_API CubeNeighborCache : public RadioChannel::INeighborCache, public cListener, public cSimpleModule
 {
     public:
         typedef std::vector<const IRadio *> Radios;
