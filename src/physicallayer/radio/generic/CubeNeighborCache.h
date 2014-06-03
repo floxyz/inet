@@ -27,8 +27,12 @@ class INET_API CubeNeighborCache : public RadioChannel::INeighborCache, public c
         virtual void handleSelfMessage(cMessage *msg);
 
     public:
+        void addRadio(const IRadio *radio);
+        void removeRadio(const IRadio *radio);
+
         CubeNeighborCache(int numberOfRectangles);
         virtual ~CubeNeighborCache();
+
 };
 
 #endif /* CUBENEIGHBORCACHE_H_ */

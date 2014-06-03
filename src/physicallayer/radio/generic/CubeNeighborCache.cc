@@ -61,6 +61,22 @@ void CubeNeighborCache::handleSelfMessage(cMessage *msg)
     scheduleAt(simTime() + refillPeriod, msg);
 }
 
+void CubeNeighborCache::addRadio(const IRadio *radio)
+{
+    radios.push_back(radio);
+}
+
+void CubeNeighborCache::removeRadio(const IRadio *radio)
+{
+    Radios::iterator it = find(radios.begin(), radios.end(), radio);
+    if (it != radios.end())
+        radios.erase(it);
+    else
+    {
+        // error?
+    }
+}
+
 CubeNeighborCache::~CubeNeighborCache()
 {
     cancelAndDelete(fillRectanglesTimer);
