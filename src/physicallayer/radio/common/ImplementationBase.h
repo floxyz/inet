@@ -26,7 +26,7 @@
 #include "IRadioSignalReceiver.h"
 #include "IRadioChannel.h"
 
-class INET_API RadioSignalTransmissionBase : public virtual IRadioSignalTransmission
+class INET_API RadioSignalTransmissionBase : public virtual IRadioSignalTransmission, public cSimpleModule
 {
     protected:
         const int id;
@@ -139,7 +139,7 @@ class INET_API RadioSignalNoiseBase : public IRadioSignalNoise
         virtual const simtime_t getEndTime() const { return endTime; }
 };
 
-class INET_API RadioAntennaBase : public IRadioAntenna, public cCompoundModule
+class INET_API RadioAntennaBase : public IRadioAntenna, public cSimpleModule
 {
     protected:
         IMobility *mobility;
@@ -159,7 +159,7 @@ class INET_API RadioAntennaBase : public IRadioAntenna, public cCompoundModule
         virtual IMobility *getMobility() const { return mobility; }
 };
 
-class INET_API RadioSignalFreeSpaceAttenuationBase : public virtual IRadioSignalAttenuation, public cCompoundModule
+class INET_API RadioSignalFreeSpaceAttenuationBase : public virtual IRadioSignalAttenuation, public cSimpleModule
 {
     protected:
         double alpha;
@@ -192,13 +192,13 @@ class INET_API CompoundAttenuationBase : public IRadioSignalAttenuation
         {}
 };
 
-class INET_API RadioSignalTransmitterBase : public cCompoundModule, public virtual IRadioSignalTransmitter
+class INET_API RadioSignalTransmitterBase : public cSimpleModule, public virtual IRadioSignalTransmitter
 {
     public:
         virtual W getMaxPower() const { return W(qNaN); }
 };
 
-class INET_API RadioSignalReceiverBase : public cCompoundModule, public virtual IRadioSignalReceiver
+class INET_API RadioSignalReceiverBase : public cSimpleModule, public virtual IRadioSignalReceiver
 {
     protected:
         virtual bool computeIsReceptionPossible(const IRadioSignalTransmission *transmission) const;
@@ -257,7 +257,7 @@ class INET_API SNIRRadioSignalReceiverBase : public RadioSignalReceiverBase
         virtual const IRadioSignalReceptionDecision *computeReceptionDecision(const IRadioSignalListening *listening, const IRadioSignalReception *reception, const std::vector<const IRadioSignalReception *> *interferingReceptions, const IRadioSignalNoise *backgroundNoise) const;
 };
 
-class INET_API RadioSignalPropagationBase : public cCompoundModule, public IRadioSignalPropagation
+class INET_API RadioSignalPropagationBase : public cSimpleModule, public IRadioSignalPropagation
 {
     protected:
         mps propagationSpeed;

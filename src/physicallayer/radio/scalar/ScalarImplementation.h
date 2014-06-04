@@ -154,7 +154,7 @@ class INET_API ScalarRadioSignalCompoundAttenuation : public CompoundAttenuation
         virtual double computeLoss(const IRadioSignalTransmission *transmission, simtime_t startTime, simtime_t endTime, Coord startPosition, Coord endPosition) const;
 };
 
-class INET_API ScalarRadioBackgroundNoise : public cCompoundModule, public IRadioBackgroundNoise
+class INET_API ScalarRadioBackgroundNoise : public cSimpleModule, public IRadioBackgroundNoise
 {
     protected:
         W power;

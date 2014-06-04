@@ -77,7 +77,7 @@ class INET_API IdealRadioSignalAttenuationBase : public IRadioSignalAttenuation
         virtual const IRadioSignalReception *computeReception(const IRadio *radio, const IRadioSignalTransmission *transmission) const;
 };
 
-class INET_API IdealRadioSignalFreeSpaceAttenuation : public IdealRadioSignalAttenuationBase, public cCompoundModule
+class INET_API IdealRadioSignalFreeSpaceAttenuation : public IdealRadioSignalAttenuationBase, public cSimpleModule
 {
     public:
         IdealRadioSignalFreeSpaceAttenuation() {}

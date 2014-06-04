@@ -90,7 +90,7 @@ double ScalarRadioSignalCompoundAttenuation::computeLoss(const IRadioSignalTrans
 
 void ScalarRadioBackgroundNoise::initialize(int stage)
 {
-    cCompoundModule::initialize(stage);
+    cSimpleModule::initialize(stage);
     if (stage == INITSTAGE_LOCAL)
     {
         power = mW(FWMath::dBm2mW(par("power")));
@@ -127,7 +127,7 @@ void ScalarRadioSignalListeningDecision::printToStream(std::ostream &stream) con
 
 void ScalarRadioSignalTransmitter::initialize(int stage)
 {
-    cCompoundModule::initialize(stage);
+    cSimpleModule::initialize(stage);
     if (stage == INITSTAGE_LOCAL)
     {
         headerBitLength = par("headerBitLength");
