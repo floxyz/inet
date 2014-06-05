@@ -32,5 +32,7 @@ module GridNeighborCache like INeighborCache
         double range @unit(m) = default(250m);
         double refillPeriod @unit(s) = default(1s);
         double maxSpeed @unit(mps) = default(8mps);
+        bool useMaxDimension = default(false);
+
         @class(GridNeighborCache);
 }

@@ -1,20 +1,12 @@
 #include "GridNeighborCache.h"
-#include <algorithm>
+
 Define_Module(GridNeighborCache);
-
-GridNeighborCache::GridNeighborCache() :
-                                      fillRectanglesTimer(NULL)
-{
-
-}
-
-
 
 void GridNeighborCache::initialize(int stage)
 {
     if (stage == INITSTAGE_LOCAL)
     {
-        // TODO:
+        // TODO: NED parameter?
         radioChannel = check_and_cast<RadioChannel*>(getParentModule());
 
         constraintAreaMin.x = par("constraintAreaMinX");
@@ -31,19 +23,16 @@ void GridNeighborCache::initialize(int stage)
         range = par("range");
         maxSpeed = par("maxSpeed");
         refillPeriod = par("refillPeriod");
+        useMaxDimension = par("useMaxDimension");
 
-        // todo: the order of the method calls is crucial
-        sideLengths = calculateSideLength();
-        dimension = calculateDimension();
-        numberOfCells = calculateNumberOfCells();
-        grid.resize(numberOfCells);
+        init();
 
     }
-    else if (stage == INITSTAGE_LINK_LAYER_2)
+    else if (stage == INITSTAGE_LINK_LAYER_2) // TODO: is it the correct stage to do this?
     {
         fillCubeVector();
-        fillRectanglesTimer = new cMessage("fillRectanglesTimer");
-        scheduleAt(simTime() + refillPeriod, fillRectanglesTimer);
+        refillCellsTimer = new cMessage("refillCellsTimer");
+        scheduleAt(simTime() + refillPeriod, refillCellsTimer);
     }
 }
 
@@ -54,7 +43,7 @@ void GridNeighborCache::fillCubeVector()
 
     for (unsigned int i = 0; i < radios.size(); i++)
     {
-        const IRadio * radio = radios[i];
+        const IRadio *radio = radios[i];
         Coord radioPos = radio->getAntenna()->getMobility()->getCurrentPosition();
         grid[posToCubeId(radioPos)].push_back(radio);
     }
@@ -64,9 +53,9 @@ unsigned int GridNeighborCache::posToCubeId(Coord pos)
 {
     // map coordinates to indices
 
-    unsigned int xIndex = pos.x * dimension.x / sideLengths.x;
-    unsigned int yIndex = pos.y * dimension.y / sideLengths.y;
-    unsigned int zIndex = pos.z * dimension.z / sideLengths.z;
+    unsigned int xIndex = pos.x * dimension[0] / sideLengths.x;
+    unsigned int yIndex = pos.y * dimension[1] / sideLengths.y;
+    unsigned int zIndex = pos.z * dimension[2] / sideLengths.z;
 
     return rowmajorIndex(xIndex, yIndex, zIndex);
 }
@@ -74,7 +63,6 @@ unsigned int GridNeighborCache::posToCubeId(Coord pos)
 unsigned int GridNeighborCache::rowmajorIndex(unsigned int xIndex, unsigned int yIndex, unsigned int zIndex)
 {
     unsigned int coord[3] = {xIndex, yIndex, zIndex};
-    unsigned int dim[3] = {(unsigned int)dimension.x, (unsigned int)dimension.y, (unsigned int)dimension.z};
     unsigned int ind = 0;
 
     for (unsigned int k = 0; k < 3; k++)
@@ -82,8 +70,8 @@ unsigned int GridNeighborCache::rowmajorIndex(unsigned int xIndex, unsigned int 
         unsigned int prodDim = 1;
 
         for (unsigned int l = k + 1; l < 3; l++)
-            if (dim[l] > 0)
-                prodDim *= dim[l];
+            if (dimension[l] > 0)
+                prodDim *= dimension[l];
 
         ind += prodDim * coord[k];
     }
@@ -93,16 +81,14 @@ unsigned int GridNeighborCache::rowmajorIndex(unsigned int xIndex, unsigned int 
 
 Coord GridNeighborCache::decodeRowmajorIndex(unsigned int ind)
 {
-    unsigned int dim[3] = {(unsigned int)dimension.x, (unsigned int)dimension.y, (unsigned int)dimension.z};
-    int coord[3];
-
+    int coord[3] = {-1, -1, -1};
     for (unsigned int k = 0; k < 3; k++)
     {
         unsigned int prodDim = 1;
 
         for (unsigned int l = k + 1; l < 3; l++)
-            if (dim[l] > 0)
-                prodDim *= dim[l];
+            if (dimension[l] > 0)
+                prodDim *= dimension[l];
 
         coord[k] = ind / prodDim;
         ind %= prodDim;
@@ -115,7 +101,7 @@ void GridNeighborCache::handleMessage(cMessage *msg)
     if (!msg->isSelfMessage())
         throw cRuntimeError("This module only handles self messages");
 
-    EV_DETAIL << "Update neighbors" << endl;
+    EV_DETAIL << "Updating the grid cells" << endl;
 
     fillCubeVector();
 
@@ -134,37 +120,40 @@ void GridNeighborCache::removeRadio(const IRadio *radio)
         radios.erase(it);
     else
     {
-        // error?
+        // TODO: is it an error?
     }
 }
 
-void GridNeighborCache::sendToNeighbors(IRadio* transmitter, const IRadioFrame* frame)
+void GridNeighborCache::sendToNeighbors(IRadio *transmitter, const IRadioFrame *frame)
 {
     double radius = range + (maxSpeed * refillPeriod);
     Coord transmitterPos = transmitter->getAntenna()->getMobility()->getCurrentPosition();
 
-    int xCells = sideLengths.x == 0 ? 0 : ceil((radius * dimension.x) / sideLengths.x);
-    int yCells = sideLengths.y == 0 ? 0 : ceil((radius * dimension.y) / sideLengths.y);
-    int zCells = sideLengths.z == 0 ? 0 : ceil((radius * dimension.z) / sideLengths.z);
-
-    Coord transmitterMatCoord = decodeRowmajorIndex(posToCubeId(transmitterPos));
+    // we have to measure the radius in cells
+    int xCells = sideLengths.x == 0 ? 0 : ceil((radius * dimension[0]) / sideLengths.x);
+    int yCells = sideLengths.y == 0 ? 0 : ceil((radius * dimension[1]) / sideLengths.y);
+    int zCells = sideLengths.z == 0 ? 0 : ceil((radius * dimension[2]) / sideLengths.z);
 
     // decode the row-major index to matrix indices
     // for easier calculations
+    Coord transmitterMatCoord = decodeRowmajorIndex(posToCubeId(transmitterPos));
 
     int transmitterMatICoord = transmitterMatCoord.x;
     int transmitterMatJCoord = transmitterMatCoord.y;
     int transmitterMatKCoord = transmitterMatCoord.z;
 
+    // the start and the end positions of the smallest rectangle which contains our ball with
+    // the radius calculated above
     int iStart = transmitterMatICoord - xCells < 0 ? 0 : transmitterMatICoord - xCells;
-    int iEnd = transmitterMatICoord + xCells >= dimension.x ? dimension.x - 1 : transmitterMatICoord + xCells;
+    int iEnd = transmitterMatICoord + xCells >= dimension[0] ? dimension[0] - 1 : transmitterMatICoord + xCells;
 
     int jStart = transmitterMatJCoord - yCells < 0 ? 0 : transmitterMatJCoord - yCells;
-    int jEnd = transmitterMatJCoord + yCells >= dimension.y ? dimension.y - 1 : transmitterMatJCoord + yCells;
+    int jEnd = transmitterMatJCoord + yCells >= dimension[1] ? dimension[1] - 1 : transmitterMatJCoord + yCells;
 
     int kStart = transmitterMatKCoord - zCells < 0 ? 0 : transmitterMatKCoord - zCells;
-    int kEnd = transmitterMatKCoord + zCells >= dimension.z ? dimension.z - 1: transmitterMatKCoord + zCells;
+    int kEnd = transmitterMatKCoord + zCells >= dimension[2] ? dimension[2] - 1: transmitterMatKCoord + zCells;
 
+    // dimension[X] - 1 equals to 1 if dimension[X] = 0
     if (iEnd < 0) iEnd = 0;
     if (jEnd < 0) jEnd = 0;
     if (kEnd < 0) kEnd = 0;
@@ -189,13 +178,13 @@ void GridNeighborCache::sendToNeighbors(IRadio* transmitter, const IRadioFrame* 
 
 }
 
-Coord GridNeighborCache::calculateDimension()
+void GridNeighborCache::calculateDimension(int *dim)
 {
     int xDim = sideLengths.x / splittingUnits.x;
     int yDim = sideLengths.y / splittingUnits.y;
     int zDim = sideLengths.z / splittingUnits.z;
 
-    if (true) // todo:
+    if (useMaxDimension)
     {
         int maxDim = std::max(std::max(xDim,yDim),zDim);
 
@@ -203,7 +192,10 @@ Coord GridNeighborCache::calculateDimension()
         yDim = yDim == 0 ? yDim : maxDim;
         zDim = zDim == 0 ? zDim : maxDim;
     }
-    return Coord(xDim, yDim, zDim);
+
+    dim[0] = xDim;
+    dim[1] = yDim;
+    dim[2] = zDim;
 }
 
 Coord GridNeighborCache::calculateSideLength()
@@ -214,14 +206,24 @@ Coord GridNeighborCache::calculateSideLength()
 
 unsigned int GridNeighborCache::calculateNumberOfCells()
 {
-    int xDim = dimension.x != 0 ? dimension.x : 1;
-    int yDim = dimension.y != 0 ? dimension.y : 1;
-    int zDim = dimension.z != 0 ? dimension.z : 1;
-    return (unsigned int)(xDim * yDim * zDim);
+    unsigned int prodDim = 1;
+    for (int i = 0; i < 3; i++)
+        if (dimension[i] != 0)
+            prodDim *= dimension[i];
+
+    return prodDim;
+}
+
+void GridNeighborCache::init()
+{
+    sideLengths = calculateSideLength();
+    calculateDimension(dimension);
+    numberOfCells = calculateNumberOfCells();
+    grid.resize(numberOfCells);
 }
 
 GridNeighborCache::~GridNeighborCache()
 {
-    cancelAndDelete(fillRectanglesTimer);
+    cancelAndDelete(refillCellsTimer);
 }
 
