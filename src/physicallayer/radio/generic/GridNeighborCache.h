@@ -30,7 +30,6 @@ class INET_API GridNeighborCache : public RadioChannel::INeighborCache, public c
         virtual void initialize(int stage);
         virtual void handleMessage(cMessage *msg);
         void fillCubeVector();
-        void fillNeighborVector(Coord transmitterPos, std::vector<int>& neighborCubeIDs);
 
         Coord calculateSideLength();
         Coord calculateDimension();

@@ -138,25 +138,10 @@ void GridNeighborCache::removeRadio(const IRadio *radio)
     }
 }
 
-
-
 void GridNeighborCache::sendToNeighbors(IRadio* transmitter, const IRadioFrame* frame)
 {
-    std::vector<int> neighborCubeIDs;
-    Coord transmitterPos = transmitter->getAntenna()->getMobility()->getCurrentPosition();
-    fillNeighborVector(transmitterPos, neighborCubeIDs);
-    for (unsigned int i = 0; i < neighborCubeIDs.size(); i++)
-    {
-        std::cout << "id: " << neighborCubeIDs[i] << endl;
-        Radios *neighborCube = &grid[neighborCubeIDs[i]];
-        for (unsigned int j = 0; j < neighborCube->size(); j++)
-            radioChannel->sendToRadio(transmitter, (*neighborCube)[j], frame);
-    }
-}
-
-void GridNeighborCache::fillNeighborVector(Coord transmitterPos, std::vector<int>& neighborCubeIDs)
-{
     double radius = range + (maxSpeed * refillPeriod);
+    Coord transmitterPos = transmitter->getAntenna()->getMobility()->getCurrentPosition();
 
     int xCells = sideLengths.x == 0 ? 0 : ceil((radius * dimension.x) / sideLengths.x);
     int yCells = sideLengths.y == 0 ? 0 : ceil((radius * dimension.y) / sideLengths.y);
@@ -164,7 +149,7 @@ void GridNeighborCache::fillNeighborVector(Coord transmitterPos, std::vector<int
 
     Coord transmitterMatCoord = decodeRowmajorIndex(posToCubeId(transmitterPos));
 
-    // decodes the row-major index to matrix indices
+    // decode the row-major index to matrix indices
     // for easier calculations
 
     int transmitterMatICoord = transmitterMatCoord.x;
@@ -184,11 +169,23 @@ void GridNeighborCache::fillNeighborVector(Coord transmitterPos, std::vector<int
     if (jEnd < 0) jEnd = 0;
     if (kEnd < 0) kEnd = 0;
 
-    // collecting the neighbor cells
+    // sending frame to the neighbor cells
+
     for (int i = iStart; i <= iEnd; i++)
+    {
         for (int j = jStart; j <= jEnd; j++)
+        {
             for (int k = kStart; k <= kEnd; k++)
-                neighborCubeIDs.push_back(rowmajorIndex(i,j,k));
+            {
+                int cellID = rowmajorIndex(i,j,k);
+                Radios *neighborCube = &grid[cellID];
+                unsigned int cellSize = neighborCube->size();
+
+                for (unsigned int l = 0; l < cellSize; l++)
+                    radioChannel->sendToRadio(transmitter, (*neighborCube)[l], frame);
+            }
+        }
+    }
 
 }
 
