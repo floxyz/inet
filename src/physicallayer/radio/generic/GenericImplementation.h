@@ -59,6 +59,23 @@ class INET_API RadioSignalArrival : public virtual IRadioSignalArrival
         virtual const EulerAngles getEndOrientation() const { return endOrientation; }
 };
 
+class INET_API BandRadioSignalListening : public RadioSignalListeningBase
+{
+    protected:
+        const Hz carrierFrequency;
+        const Hz bandwidth;
+
+    public:
+        BandRadioSignalListening(const IRadio *radio, simtime_t startTime, simtime_t endTime, Coord startPosition, Coord endPosition, Hz carrierFrequency, Hz bandwidth) :
+            RadioSignalListeningBase(radio, startTime, endTime, startPosition, endPosition),
+            carrierFrequency(carrierFrequency),
+            bandwidth(bandwidth)
+        {}
+
+        virtual Hz getCarrierFrequency() const { return carrierFrequency; }
+        virtual Hz getBandwidth() const { return bandwidth; }
+};
+
 class INET_API IsotropicRadioAntenna : public RadioAntennaBase
 {
     public:
@@ -167,7 +184,6 @@ class INET_API RadioSignalListeningDecision : public IRadioSignalListeningDecisi
         virtual const IRadioSignalListening *getListening() const { return listening; }
 
         virtual bool isListeningPossible() const { return isListeningPossible_; }
-
 };
 
 class INET_API RadioSignalReceptionDecision : public IRadioSignalReceptionDecision, public cObject

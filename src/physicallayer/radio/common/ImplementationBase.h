@@ -225,6 +225,8 @@ class INET_API SNIRRadioSignalReceiverBase : public RadioSignalReceiverBase
     protected:
         virtual void initialize(int stage);
 
+        virtual bool areOverlappingBands(Hz carrierFrequency1, Hz bandwidth1, Hz carrierFrequency2, Hz bandwidth2) const;
+
         /**
          * Returns the physical properties of the reception including noise and
          * signal related measures, error probabilities, actual error counts, etc.
